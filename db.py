@@ -41,6 +41,7 @@ class Database:
     def insert_one_row(self, row):
 
         try:
+            logger.info(f'Вносим строку {", ".join([str(row[key]) for key in row if key !="Фрейм"])} в БД')
             company = row['Компания']
             fact = row['Факт или прогноз']
             q_type = row['Тип Q']
@@ -60,6 +61,7 @@ class Database:
 
             self.connect.execute(smt)
             self.connect.commit()
+            logger.info('Строка успешно внесена')
         except Exception as er:
             logger.error(f'Ошибка при записи строки в БД: {er}')
             raise
