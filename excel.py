@@ -49,9 +49,11 @@ class ExcelParser:
                 frame_total = self.count_frame_total(item["Фрейм"])
                 conditions = ', '.join([item[key] for key in item if key not in ['Компания', 'Фрейм']])
                 solution_string += f'Расчетный тотал для компании {item["Компания"]}' \
-                                  f' с условиями {conditions} составил {frame_total}\n'
+                                    f' с условиями {conditions} составил {frame_total}\n'
             self.solution += solution_string
+
             print(self.solution)
+
         except Exception as er:
             logger.error(f'Ошибка при подсчете фрейма: {er}')
             raise
@@ -66,7 +68,9 @@ class ExcelParser:
             raise
 
         try:
+            logger.info(f'Чтение файла {filepath}')
             self.main_dataframe = pandas.read_excel(filepath, header=[0,1,2])
+            logger.info('Файл успешно прочитан')
         except Exception as er:
             logger.error(f'Произошла ошибка при считывании файла: {er}')
             raise
