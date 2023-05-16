@@ -12,7 +12,7 @@ class ExcelParser:
         self.frames = []
         self.solution = ''
 
-        self.level_names = ['company', 'id']
+        self.level_names = ['company', 'id']  # Заголовки, не требующие обработки или уже обработанные
         self.i = 1
         self.multiheaders_by_number = {
             1: 'Факт или прогноз',
@@ -108,33 +108,52 @@ class ExcelParser:
     def divide_to_separate_frames(self):
 
         try:
-            for k in range(self.main_dataframe.columns.nlevels):
-                is_last_iter = k == self.main_dataframe.columns.nlevels-1
-                list_copy = copy.deepcopy(self.frames)
-                list_to_insert = []
 
-                for item in list_copy:
+            # Проход по каждому уровню вложенности
+            levels_count = self.main_dataframe.columns.nlevels
+            for k in range(levels_count):
+
+                # Проверка на последнюю итерацию
+                last_iter = True if k == levels_count - 1 else False
+
+                frames_to_prepare = copy.deepcopy(self.frames)
+                frames_result = []
+
+                # Разделение фрейма на меньшие фреймы
+                for item in frames_to_prepare:
                     frame = item['Фрейм']
+                    cols = frame.columns
 
-                    if is_last_iter:
-                        level_names = [item for item in frame.columns if not "Unnamed" in item]
+                    # Последний уровень вложенности считывается иначе
+                    if not last_iter:
+                        columns_names = cols.levels[0]
+                        levels_names_cleared = [name for name in columns_names
+                                                if name not in self.level_names and "Unnamed" not in name]
                     else:
-                        level_names = [item for item in list(frame.columns.levels[0]) if item not in self.level_names and not "Unnamed" in item]
+                        levels_names_cleared = [name for name in cols if "Unnamed" not in item]
 
-                    for name in level_names:
+                    # Получаем фрейм из каждой колонки
+                    for name in levels_names_cleared:
                         item_copy = copy.deepcopy(item)
-                        item_copy[self.multiheaders_by_number[self.i]] = name
+                        header = self.multiheaders_by_number[self.i]
+                        item_copy[header] = name
                         item_copy['Фрейм'] = frame[name]
-                        list_to_insert.append(item_copy)
-                        del item_copy
 
-                if not is_last_iter:
+                        # Добавляем фрейм в результат
+                        frames_result.append(item_copy)
+
+                # Если итерация не последняя - удаляем верхний уровень вложенности
+                if not last_iter:
                     frame.columns = frame.columns.droplevel()
 
-                self.level_names += level_names
-                self.frames = copy.deepcopy(list_to_insert)
+                # Добавляем уже прочитанные имена в список, чтобы не обрабатывать их повторно
+                self.level_names += levels_names_cleared
+
+                # Подменяем фреймы более высокого уровня фреймами более низкого уровня
+                self.frames = copy.deepcopy(frames_result)
                 self.i += 1
-                del list_copy, list_to_insert
+
+            return
 
         except Exception as er:
             logger.error(f'Ошибка при разделении на фреймы: {er}')
