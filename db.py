@@ -1,6 +1,8 @@
-from sqlalchemy import create_engine, Table, Column, Integer, String, DateTime, MetaData, insert
-from loguru import logger
 from datetime import datetime
+
+from loguru import logger
+from sqlalchemy import (Column, DateTime, Integer, MetaData, String, Table,
+                        create_engine, insert)
 
 
 class Database:

@@ -1,5 +1,5 @@
-from excel import ExcelParser
 from db import Database
+from excel import ExcelParser
 
 
 def main():
